@@ -1,0 +1,2 @@
+# FaceEmotionRecognition
+Detects facial emotion 
