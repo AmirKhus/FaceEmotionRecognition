@@ -1,17 +1,15 @@
-
 import cv2
+import gradio as gr
 from deepface import DeepFace
 
 faceCascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-cap = cv2.VideoCapture(1)
-if not cap.isOpened():
-    cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    raise IOError("Cannot open Webcam")
+def detect_emotion(input_data):
+    if isinstance(input_data, str):  # If input is a file path
+        frame = cv2.imread(input_data)
+    else:  # If input is from webcam
+        frame = input_data
 
-while True:
-    ret, frame = cap.read()
     result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -23,21 +21,14 @@ while True:
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         cv2.putText(frame,
-            result[0]['dominant_emotion'],
-            (x, y - 10),
-            font, 1,
-            (0, 0, 255),
-            2,
-            cv2.LINE_4)
+                    result[0]['dominant_emotion'],
+                    (x, y - 10),
+                    font, 1,
+                    (0, 0, 255),
+                    2,
+                    cv2.LINE_4)
 
+    return frame[:, :, ::-1]  # convert BGR to RGB for Gradio
 
-    cv2.imshow('Original video', frame)
-
-    if cv2.waitKey(2) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
-WARNING:tensorflow:From E:\Application\Lib\site-packages\tf_keras\src\losses.py:2976: The name tf.losses.sparse_softmax_cross_entropy is deprecated. Please use tf.compat.v1.losses.sparse_softmax_cross_entropy instead.
-
- 
+iface = gr.Interface(fn=detect_emotion, inputs="image", outputs="image", title="Emotion Detection")
+iface.launch(share=True,  debug=True)
